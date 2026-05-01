@@ -1,0 +1,17 @@
+[project]
+name = "hackerrank-orchestrate-support-agent"
+version = "0.1.0"
+description = "Terminal-based support ticket triage agent for HackerRank Orchestrate."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.3.4",
+    "openai>=2.6.1",
+    "python-dotenv>=1.2.1",
+    "scikit-learn>=1.7.2",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]
