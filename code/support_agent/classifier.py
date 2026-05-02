@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from models import IntentSignal, Ticket
+from .models import IntentSignal, Ticket
 
 
 def classify_intent(ticket: Ticket) -> IntentSignal:
@@ -8,14 +8,49 @@ def classify_intent(ticket: Ticket) -> IntentSignal:
     candidates: list[str] = []
     reasons: list[str] = []
 
-    if any(phrase in text for phrase in ("thank you", "thanks", "thank u")) and len(text.split()) <= 8:
-        return IntentSignal(("invalid",), 0.9, "courtesy message without a support request")
+    if _is_clearly_invalid_request(text):
+        return IntentSignal(
+            ("invalid",),
+            0.95,
+            "ticket is a destructive or clearly out-of-scope request",
+        )
 
-    if any(phrase in text for phrase in ("site is down", "stopped working", "not working", "all requests are failing", "submissions across", "down", "crash", "error", "broken", "bug")):
+    if (
+        any(phrase in text for phrase in ("thank you", "thanks", "thank u"))
+        and len(text.split()) <= 8
+    ):
+        return IntentSignal(
+            ("invalid",), 0.9, "courtesy message without a support request"
+        )
+
+    if any(
+        phrase in text
+        for phrase in (
+            "site is down",
+            "stopped working",
+            "not working",
+            "all requests are failing",
+            "submissions across",
+            "down",
+            "crash",
+            "error",
+            "broken",
+            "bug",
+        )
+    ):
         candidates.append("bug")
         reasons.append("ticket describes failure or outage")
 
-    if any(phrase in text for phrase in ("can you add", "feature request", "support for", "enhancement", "please add")):
+    if any(
+        phrase in text
+        for phrase in (
+            "can you add",
+            "feature request",
+            "support for",
+            "enhancement",
+            "please add",
+        )
+    ):
         candidates.append("feature_request")
         reasons.append("ticket asks for product capability")
 
@@ -27,15 +62,22 @@ def classify_intent(ticket: Ticket) -> IntentSignal:
         candidates.append("product_issue")
         reasons.append("default support/product question")
     elif "product_issue" not in candidates and any(
-        phrase in text for phrase in ("how", "help", "please", "can you", "i need", "i want")
+        phrase in text
+        for phrase in ("how", "help", "please", "can you", "i need", "i want")
     ):
         candidates.append("product_issue")
 
     confidence = 0.75 if len(candidates) == 1 else 0.55
-    return IntentSignal(tuple(dict.fromkeys(candidates)), confidence, "; ".join(reasons))
+    return IntentSignal(
+        tuple(dict.fromkeys(candidates)), confidence, "; ".join(reasons)
+    )
 
 
-def revise_intent(pre_signal: IntentSignal, evidence_found: bool, high_risk: bool) -> str:
+def revise_intent(
+    pre_signal: IntentSignal, evidence_found: bool, high_risk: bool
+) -> str:
+    if "invalid" in pre_signal.candidates and pre_signal.confidence >= 0.9:
+        return "invalid"
     if high_risk and "bug" in pre_signal.candidates:
         return "bug"
     if not evidence_found and "invalid" in pre_signal.candidates:
@@ -67,4 +109,16 @@ def _looks_invalid(text: str, company: str | None) -> bool:
     if any(term in text for term in supported_terms):
         return False
     invalid_terms = ("iron man", "actor", "delete all files", "system files")
+    return any(term in text for term in invalid_terms)
+
+
+def _is_clearly_invalid_request(text: str) -> bool:
+    invalid_terms = (
+        "actor in iron man",
+        "delete all files",
+        "iron man",
+        "system files",
+        "code to delete",
+        "wipe the system",
+    )
     return any(term in text for term in invalid_terms)

@@ -28,8 +28,9 @@ Read [`problem_statement.md`](./problem_statement.md) for the full task spec, in
 ├── AGENTS.md                       # Rules for AI coding tools + transcript logging
 ├── problem_statement.md            # Full task description and I/O schema
 ├── README.md                       # You are here
-├── code/                           # ← Build your agent here
-│   └── main.py                     #   Entry point (rename/extend as you like)
+├── code/                           # Support-ticket agent implementation
+│   ├── main.py                     # Evaluator-facing CLI entry point
+│   └── support_agent/              # Parser, retriever, decisioning, generation, audit
 ├── data/                           # Local-only support corpus (no network needed)
 │   ├── hackerrank/                 #   HackerRank help center
 │   ├── claude/                     #   Claude Help Center export
@@ -67,7 +68,7 @@ Beyond that you are free to bring your own approach — RAG, vector DBs, tool us
 
 ## Where your code goes
 
-All of your work belongs in [`code/`](./code/). The repo ships with an empty `code/main.py` you can grow into your full agent — add more modules (`agent.py`, `retriever.py`, `classifier.py`, etc.) next to it as needed.
+All of the runnable agent code lives in [`code/`](./code/). The evaluator-facing entrypoint is `code/main.py`; the implementation is organized under `code/support_agent/`.
 
 Conventions:
 
@@ -87,7 +88,18 @@ git clone git@github.com:interviewstreet/hackerrank-orchestrate-may26.git
 cd hackerrank-orchestrate-may26
 ```
 
-You are free to use any language or runtime. We recommend **Python**, **JavaScript**, or **TypeScript**.
+This submission uses Python with `uv`.
+
+```bash
+uv sync
+uv run python code/main.py schema
+uv run python code/main.py inspect
+uv run python code/main.py audit
+uv run python code/main.py explain 21 --no-llm
+uv run python code/main.py run --no-llm
+```
+
+The default run command reads `support_tickets/support_tickets.csv` and writes `support_tickets/output.csv`.
 
 ---
 

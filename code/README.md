@@ -27,6 +27,8 @@ uv run python code/main.py inspect
 uv run python code/main.py show-ticket 1
 uv run python code/main.py show-sample 1
 uv run python code/main.py run
+uv run python code/main.py audit
+uv run python code/main.py explain 21 --no-llm
 ```
 
 Run without LLM calls:
@@ -44,7 +46,11 @@ CSV input
   -> ticket parser
   -> provisional intent and risk scan
   -> corpus loader and chunker
-  -> TF-IDF retriever with metadata boosts
+  -> hybrid retriever
+       -> TF-IDF lexical scoring
+       -> local SVD vector scoring
+       -> grep-style term/phrase evidence scoring
+       -> metadata and support-concept boosts
   -> evidence evaluator
   -> post-retrieval intent revision
   -> decision engine
@@ -53,7 +59,11 @@ CSV input
   -> output.csv
 ```
 
-The retriever is the core quality layer. It loads markdown support articles from `data/`, preserves metadata such as company, product area, title, breadcrumbs, and source URL, then searches metadata-enriched chunks.
+The retriever is the core quality layer. It loads markdown support articles from `data/`, preserves metadata such as company, product area, title, breadcrumbs, and source URL, then searches metadata-enriched chunks. The vector layer is fully local and deterministic; it does not send corpus text to an external embedding API.
+
+Use `explain` to inspect one row end to end. It prints intent, risk, evidence, lexical/vector/grep/metadata scores, decision, and final response.
+
+Use `audit` before submission. It checks output schema, escalation formatting, response quality invariants, replied-row evidence strength, same-company evidence alignment, and labeled sample calibration.
 
 ## Safety Policy
 

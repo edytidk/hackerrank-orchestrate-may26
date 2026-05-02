@@ -50,6 +50,8 @@ class Chunk:
 class RetrievalResult:
     chunk: Chunk
     lexical_score: float
+    vector_score: float
+    grep_score: float
     metadata_boost: float
     final_score: float
     reason: str
@@ -88,3 +90,13 @@ class AgentOutput:
     status: str
     request_type: str
     justification: str
+
+
+@dataclass(frozen=True)
+class PipelineTrace:
+    ticket: Ticket
+    intent: IntentSignal
+    risk: RiskSignal
+    evidence: tuple[RetrievalResult, ...]
+    decision: Decision
+    output: AgentOutput

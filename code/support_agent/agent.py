@@ -4,14 +4,14 @@ import csv
 import re
 from pathlib import Path
 
-from classifier import classify_intent
-from corpus import load_corpus
-from decision import make_decision
-from generator import generate_response
-from models import AgentOutput, Ticket
-from retriever import Retriever
-from risk import assess_risk
-from validator import validate_output
+from .classifier import classify_intent
+from .corpus import load_corpus
+from .decision import make_decision
+from .generator import generate_response
+from .models import AgentOutput, PipelineTrace, Ticket
+from .retriever import Retriever
+from .risk import assess_risk
+from .validator import validate_output
 
 
 OUTPUT_FIELDS = [
@@ -33,12 +33,15 @@ class SupportAgent:
         self.use_llm = use_llm
 
     def answer(self, ticket: Ticket) -> AgentOutput:
+        return self.trace(ticket).output
+
+    def trace(self, ticket: Ticket) -> PipelineTrace:
         intent = classify_intent(ticket)
         risk = assess_risk(ticket)
         evidence = self.retriever.search(ticket)
         decision = make_decision(ticket, intent, risk, evidence)
         response = generate_response(ticket, decision, use_llm=self.use_llm)
-        return validate_output(
+        output = validate_output(
             AgentOutput(
                 issue=ticket.issue,
                 subject=ticket.subject,
@@ -50,6 +53,14 @@ class SupportAgent:
                 justification=decision.justification,
             )
         )
+        return PipelineTrace(
+            ticket=ticket,
+            intent=intent,
+            risk=risk,
+            evidence=tuple(evidence),
+            decision=decision,
+            output=output,
+        )
 
 
 def read_tickets(path: Path) -> list[Ticket]:
@@ -60,15 +71,28 @@ def read_tickets(path: Path) -> list[Ticket]:
         issue = _clean(row.get("Issue") or row.get("issue") or "")
         subject = _clean(row.get("Subject") or row.get("subject") or "")
         company = _normalize_company(row.get("Company") or row.get("company") or "")
-        query = _clean(f"{subject}\n{issue}")
-        tickets.append(Ticket(row_id=row_id, issue=issue, subject=subject, company=company, query=query))
+        query_parts = [issue]
+        if subject:
+            query_parts.append(subject)
+        if issue and subject and issue.lower() != subject.lower():
+            query_parts.append(issue)
+        query = _clean("\n".join(query_parts))
+        tickets.append(
+            Ticket(
+                row_id=row_id,
+                issue=issue,
+                subject=subject,
+                company=company,
+                query=query,
+            )
+        )
     return tickets
 
 
 def write_outputs(path: Path, outputs: list[AgentOutput]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", newline="", encoding="utf-8") as handle:
-        writer = csv.DictWriter(handle, fieldnames=OUTPUT_FIELDS)
+        writer = csv.DictWriter(handle, fieldnames=OUTPUT_FIELDS, lineterminator="\n")
         writer.writeheader()
         for output in outputs:
             writer.writerow(
@@ -85,7 +109,9 @@ def write_outputs(path: Path, outputs: list[AgentOutput]) -> None:
             )
 
 
-def run_pipeline(input_path: Path, output_path: Path, data_dir: Path, use_llm: bool = True) -> list[AgentOutput]:
+def run_pipeline(
+    input_path: Path, output_path: Path, data_dir: Path, use_llm: bool = True
+) -> list[AgentOutput]:
     agent = SupportAgent(data_dir=data_dir, use_llm=use_llm)
     tickets = read_tickets(input_path)
     outputs = [agent.answer(ticket) for ticket in tickets]

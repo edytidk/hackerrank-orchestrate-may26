@@ -1,0 +1,23 @@
+{
+  "include": [
+    "code",
+    "tests"
+  ],
+  "extraPaths": [
+    "code"
+  ],
+  "executionEnvironments": [
+    {
+      "root": "code",
+      "extraPaths": [
+        "code"
+      ]
+    },
+    {
+      "root": "tests",
+      "extraPaths": [
+        "code"
+      ]
+    }
+  ]
+}

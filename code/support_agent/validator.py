@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from models import AgentOutput, VALID_REQUEST_TYPES, VALID_STATUSES
+from .models import AgentOutput, VALID_REQUEST_TYPES, VALID_STATUSES
 
 
 def validate_output(output: AgentOutput) -> AgentOutput:
@@ -12,12 +12,20 @@ def validate_output(output: AgentOutput) -> AgentOutput:
 
     if status not in VALID_STATUSES:
         status = "escalated"
-        justification = _append_reason(justification, "Invalid status was corrected to escalated.")
+        justification = _append_reason(
+            justification, "Invalid status was corrected to escalated."
+        )
     if request_type not in VALID_REQUEST_TYPES:
         request_type = "product_issue"
-        justification = _append_reason(justification, "Invalid request type was corrected to product_issue.")
+        justification = _append_reason(
+            justification, "Invalid request type was corrected to product_issue."
+        )
     if not response:
-        response = "Escalate to a human" if status == "escalated" else "I am sorry, this is out of scope from my capabilities."
+        response = (
+            "Escalate to a human"
+            if status == "escalated"
+            else "I am sorry, this is out of scope from my capabilities."
+        )
     if status == "escalated" and response.lower() != "escalate to a human":
         response = "Escalate to a human"
     if not justification:

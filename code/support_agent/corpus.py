@@ -3,12 +3,13 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from models import Chunk
+from .models import Chunk
 
 
 FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 HEADING_RE = re.compile(r"^(#{1,6})\s+(.+?)\s*$")
 LINK_RE = re.compile(r"\[([^\]]+)\]\([^)]+\)")
+IMAGE_RE = re.compile(r"!\[[^\]]*\]\([^)]+\)")
 HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 
 
@@ -89,7 +90,9 @@ def _normalize_company(value: str) -> str:
     return value.title() if value else "Unknown"
 
 
-def _infer_product_area(company: str, parts: tuple[str, ...], metadata: dict[str, str]) -> str:
+def _infer_product_area(
+    company: str, parts: tuple[str, ...], metadata: dict[str, str]
+) -> str:
     breadcrumbs = metadata.get("breadcrumbs", "")
     if breadcrumbs:
         first = breadcrumbs.split(">")[0].strip().strip('"')
@@ -130,6 +133,7 @@ def _slug(value: str) -> str:
 
 def _clean_markdown(text: str) -> str:
     text = HTML_COMMENT_RE.sub(" ", text)
+    text = IMAGE_RE.sub(" ", text)
     text = LINK_RE.sub(r"\1", text)
     text = text.replace("\xa0", " ")
     text = re.sub(r"`([^`]+)`", r"\1", text)
