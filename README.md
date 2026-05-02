@@ -95,11 +95,11 @@ uv sync
 uv run python code/main.py schema
 uv run python code/main.py inspect
 uv run python code/main.py audit
-uv run python code/main.py explain 21 --no-llm
-uv run python code/main.py run --no-llm
+uv run python code/main.py explain 21
+uv run python code/main.py run
 ```
 
-The default run command reads `support_tickets/support_tickets.csv` and writes `support_tickets/output.csv`.
+The default run command reads `support_tickets/support_tickets.csv` and writes `support_tickets/output.csv` using the deterministic local pipeline. Optional OpenAI response/justification writing is available with `--use-llm`.
 
 ---
 

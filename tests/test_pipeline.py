@@ -217,3 +217,26 @@ def test_release_audit_and_sample_calibration_are_clean() -> None:
         REPO_ROOT / "data",
     )
     assert sample == {"rows": 10, "status": 10, "request_type": 10, "product_area": 10}
+
+
+def test_escalation_justifications_are_specific_and_evidence_aware() -> None:
+    agent = SupportAgent(REPO_ROOT / "data", use_llm=False)
+    tickets = read_tickets(REPO_ROOT / "support_tickets" / "support_tickets.csv")
+
+    access_loss = agent.answer(tickets[0])
+    assert access_loss.status == "escalated"
+    assert "unauthorized account access" in access_loss.justification
+    assert "human" in access_loss.justification.lower()
+
+    assessment_reschedule = agent.answer(tickets[9])
+    assert assessment_reschedule.status == "escalated"
+    assert "recruiter or hiring team" in assessment_reschedule.justification
+    assert "Top evidence" in assessment_reschedule.justification
+
+    vague_ticket = agent.answer(tickets[11])
+    assert vague_ticket.status == "escalated"
+    assert "lacks enough detail" in vague_ticket.justification
+    assert (
+        "No strong matching support article" in vague_ticket.justification
+        or "Top evidence" in vague_ticket.justification
+    )

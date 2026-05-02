@@ -8,6 +8,7 @@ from .classifier import classify_intent
 from .corpus import load_corpus
 from .decision import make_decision
 from .generator import generate_response
+from .justification import generate_justification
 from .models import AgentOutput, PipelineTrace, Ticket
 from .retriever import Retriever
 from .risk import assess_risk
@@ -27,7 +28,7 @@ OUTPUT_FIELDS = [
 
 
 class SupportAgent:
-    def __init__(self, data_dir: Path, use_llm: bool = True) -> None:
+    def __init__(self, data_dir: Path, use_llm: bool = False) -> None:
         self.chunks = load_corpus(data_dir)
         self.retriever = Retriever(self.chunks)
         self.use_llm = use_llm
@@ -41,6 +42,14 @@ class SupportAgent:
         evidence = self.retriever.search(ticket)
         decision = make_decision(ticket, intent, risk, evidence)
         response = generate_response(ticket, decision, use_llm=self.use_llm)
+        justification = generate_justification(
+            ticket=ticket,
+            intent=intent,
+            risk=risk,
+            evidence=tuple(evidence),
+            decision=decision,
+            use_llm=self.use_llm,
+        )
         output = validate_output(
             AgentOutput(
                 issue=ticket.issue,
@@ -50,7 +59,7 @@ class SupportAgent:
                 product_area=decision.product_area,
                 status=decision.status,
                 request_type=decision.request_type,
-                justification=decision.justification,
+                justification=justification,
             )
         )
         return PipelineTrace(
@@ -110,7 +119,7 @@ def write_outputs(path: Path, outputs: list[AgentOutput]) -> None:
 
 
 def run_pipeline(
-    input_path: Path, output_path: Path, data_dir: Path, use_llm: bool = True
+    input_path: Path, output_path: Path, data_dir: Path, use_llm: bool = False
 ) -> list[AgentOutput]:
     agent = SupportAgent(data_dir=data_dir, use_llm=use_llm)
     tickets = read_tickets(input_path)

@@ -17,7 +17,7 @@ OPENAI_API_KEY=...
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-If no OpenAI key is present, the agent falls back to deterministic evidence-based response generation.
+The default agent path is deterministic and local. OpenAI is opt-in with `--use-llm`; if no OpenAI key is present, the agent uses deterministic evidence-based response and justification generation.
 
 ## Commands
 
@@ -28,16 +28,16 @@ uv run python code/main.py show-ticket 1
 uv run python code/main.py show-sample 1
 uv run python code/main.py run
 uv run python code/main.py audit
-uv run python code/main.py explain 21 --no-llm
+uv run python code/main.py explain 21
 ```
 
-Run without LLM calls:
+Optional LLM-assisted response and justification writing:
 
 ```bash
-uv run python code/main.py run --no-llm
+uv run python code/main.py run --use-llm
 ```
 
-The default run command reads `support_tickets/support_tickets.csv` and writes `support_tickets/output.csv`.
+The default run command reads `support_tickets/support_tickets.csv` and writes `support_tickets/output.csv` without LLM calls.
 
 ## Architecture
 

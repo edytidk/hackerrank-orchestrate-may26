@@ -40,7 +40,7 @@ def _invalid_response(ticket: Ticket) -> str:
 
 
 def _try_llm_response(ticket: Ticket, decision: Decision) -> str | None:
-    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
     if not os.getenv("OPENAI_API_KEY"):
         return None
     try:

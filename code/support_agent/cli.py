@@ -192,7 +192,12 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument(
         "--no-llm",
         action="store_true",
-        help="Disable optional OpenAI response generation.",
+        help="Compatibility flag; deterministic local generation is already the default.",
+    )
+    run_parser.add_argument(
+        "--use-llm",
+        action="store_true",
+        help="Enable optional OpenAI response and justification generation.",
     )
 
     explain_parser = subparsers.add_parser(
@@ -204,7 +209,12 @@ def build_parser() -> argparse.ArgumentParser:
     explain_parser.add_argument(
         "--no-llm",
         action="store_true",
-        help="Disable optional OpenAI response generation.",
+        help="Compatibility flag; deterministic local generation is already the default.",
+    )
+    explain_parser.add_argument(
+        "--use-llm",
+        action="store_true",
+        help="Enable optional OpenAI response and justification generation.",
     )
 
     audit_parser = subparsers.add_parser(
@@ -241,11 +251,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         return print_schema()
     if args.command == "run":
         return run_agent(
-            args.input, args.output, args.data_dir, use_llm=not args.no_llm
+            args.input, args.output, args.data_dir, use_llm=args.use_llm
         )
     if args.command == "explain":
         return explain_ticket(
-            args.input, args.data_dir, args.row, use_llm=not args.no_llm
+            args.input, args.data_dir, args.row, use_llm=args.use_llm
         )
     if args.command == "audit":
         return audit_agent(
