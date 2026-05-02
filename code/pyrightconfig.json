@@ -1,22 +1,22 @@
 {
   "include": [
-    "code",
-    "tests"
+    ".",
+    "../tests"
   ],
   "extraPaths": [
-    "code"
+    "."
   ],
   "executionEnvironments": [
     {
-      "root": "code",
+      "root": ".",
       "extraPaths": [
-        "code"
+        "."
       ]
     },
     {
-      "root": "tests",
+      "root": "../tests",
       "extraPaths": [
-        "code"
+        "."
       ]
     }
   ]

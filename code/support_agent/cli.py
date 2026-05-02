@@ -9,7 +9,15 @@ from .agent import SupportAgent, read_tickets, run_pipeline
 from .evaluation import audit_input, compare_sample_labels
 
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+CODE_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = next(
+    (
+        candidate
+        for candidate in (CODE_ROOT.parent, CODE_ROOT)
+        if (candidate / "data").exists() or (candidate / "support_tickets").exists()
+    ),
+    CODE_ROOT.parent,
+)
 DEFAULT_INPUT = REPO_ROOT / "support_tickets" / "support_tickets.csv"
 DEFAULT_SAMPLE = REPO_ROOT / "support_tickets" / "sample_support_tickets.csv"
 DEFAULT_OUTPUT = REPO_ROOT / "support_tickets" / "output.csv"
